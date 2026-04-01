@@ -1,0 +1,88 @@
+# APIHound v3.0 - API Endpoint Wordlist
+# Add your custom endpoints here (one per line)
+
+# Common API paths
+/api/v1/users
+/api/v1/users/{id}
+/api/v1/auth/login
+/api/v1/auth/register
+/api/v1/auth/token
+/api/v1/auth/refresh
+/api/v1/auth/forgot-password
+/api/v1/auth/reset-password
+/api/v1/auth/verify
+/api/v1/auth/logout
+/api/v1/profile
+/api/v1/profile/update
+/api/v1/settings
+/api/v1/notifications
+/api/v1/messages
+/api/v1/upload
+/api/v1/files
+/api/v1/search
+/api/v1/export
+/api/v1/import
+/api/v1/webhooks
+/api/v1/integrations
+/api/v1/analytics
+/api/v1/reports
+/api/v1/billing
+/api/v1/payments
+/api/v1/subscriptions
+/api/v1/roles
+/api/v1/permissions
+/api/v1/groups
+/api/v1/teams
+/api/v1/invitations
+/api/v1/audit-log
+/api/v1/sessions
+/api/v1/sessions/{id}
+
+# Admin paths
+/api/v1/admin/users
+/api/v1/admin/settings
+/api/v1/admin/config
+/api/v1/admin/logs
+/api/v1/admin/stats
+/api/v1/admin/billing
+/api/v1/admin/maintenance
+
+# Sensitive paths
+/api/v1/internal
+/api/v1/debug
+/api/v1/test
+/api/v1/staging
+/api/v1/backup
+/api/v1/db
+/api/v1/secrets
+/api/v1/keys
+/api/v1/tokens
+/api/v1/passwords
+
+# GraphQL
+/graphql
+/api/graphql
+/graphiql
+/api/graphiql
+
+# Documentation
+/swagger.json
+/swagger.yaml
+/openapi.json
+/openapi.yaml
+/api-docs
+/api/docs
+/docs
+/redoc
+/elements
+
+# Health/Status
+/health
+/healthcheck
+/status
+/ping
+/ready
+/live
+/metrics
+/info
+/version
