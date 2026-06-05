@@ -1,0 +1,443 @@
+metadata:
+  language: v2-beta
+  name: "Supply Chain IOC and Third-Party JS Passive Scanner"
+  description: "True passive response-level BCheck. Detects known third-party JavaScript/CDN supply-chain IOCs, unsafe remote script/style loading, mutable package CDN imports, and risky dynamic remote loading patterns without sending any extra requests."
+  author: "s3c4n0n, edited by GPT-5.5 Pro"
+  tags: "passive", "supply-chain", "third-party-js", "cwe-829", "sri", "javascript", "a08-2021"
+
+given response then
+
+  #############################################################
+  # TRUE PASSIVE MODE
+  # This BCheck only uses latest.request/latest.response data.
+  # It does not perform extra HTTP actions or use insertion
+  # points, so it can run as a passive response check.
+  #############################################################
+
+  #############################################################
+  # Cluster 1: Known supply-chain IOC domains
+  # These checks scan the whole response, including headers, so
+  # CSP headers, Location headers, HTML, JS, and JSON are covered.
+  #############################################################
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*polyfill\.io([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: polyfill.io"
+      severity: high
+      confidence: certain
+      remediation: "Remove all polyfill.io references. Prefer removing Polyfill entirely for modern browsers, self-hosting required polyfills, or using a trusted maintained mirror with exact version pinning and SRI. Review templates, tag managers, and bundled JavaScript for stale references."
+      detail: `The response references polyfill.io or a subdomain such as cdn.polyfill.io. This is a known high-risk supply-chain IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*polyfill\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: polyfill.com"
+      severity: high
+      confidence: firm
+      remediation: "Remove all polyfill.com references and investigate how the reference entered the page, dependency bundle, or tag manager. Replace with reviewed self-hosted assets or a trusted pinned source."
+      detail: `The response references polyfill.com or a subdomain. This belongs to the broader Polyfill/Funnull supply-chain IOC set. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*polyfill\.site([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: polyfill.site"
+      severity: high
+      confidence: firm
+      remediation: "Remove all polyfill.site references and investigate the source of the reference. Treat this as a supply-chain compromise indicator until proven otherwise."
+      detail: `The response references polyfill.site or a subdomain. This belongs to the broader Polyfill/Funnull supply-chain IOC set. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:cdn\.|wildcard\.)?polyfill\.io\.bsclink\.cn([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: polyfill.io.bsclink.cn"
+      severity: high
+      confidence: firm
+      remediation: "Remove this reference immediately. Review DNS history, templates, tag managers, and bundled assets for stale or malicious Polyfill-related references."
+      detail: `The response references a polyfill.io.bsclink.cn hostname. This is a Polyfill-related supply-chain IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])5f52353c\.u\.fn03\.vip([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: 5f52353c.u.fn03.vip"
+      severity: high
+      confidence: firm
+      remediation: "Remove this reference immediately and investigate the page, templates, tag manager, and bundled JavaScript for compromise or stale malicious supply-chain indicators."
+      detail: `The response references 5f52353c.u.fn03.vip, a Polyfill-related supply-chain IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*bootcdn\.net([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: bootcdn.net"
+      severity: high
+      confidence: firm
+      remediation: "Remove bootcdn.net references. Replace with self-hosted reviewed assets or a trusted CDN using exact version pinning and SRI. Investigate whether the reference was introduced by a third-party dependency, plugin, or tag manager."
+      detail: `The response references bootcdn.net or a subdomain. This domain is part of the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*bootcss\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: bootcss.com"
+      severity: high
+      confidence: firm
+      remediation: "Remove bootcss.com references. Replace with self-hosted reviewed assets or a trusted CDN using exact version pinning and SRI. Investigate where the reference originated."
+      detail: `The response references bootcss.com or a subdomain such as cdn.bootcss.com. This domain is part of the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*staticfile\.net([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: staticfile.net"
+      severity: high
+      confidence: firm
+      remediation: "Remove staticfile.net references and replace them with controlled, pinned, integrity-protected assets. Review templates, CMS plugins, tag managers, and bundled JavaScript."
+      detail: `The response references staticfile.net or a subdomain. This domain is part of the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*staticfile\.org([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: staticfile.org"
+      severity: high
+      confidence: firm
+      remediation: "Remove staticfile.org references and replace them with controlled, pinned, integrity-protected assets. Review templates, CMS plugins, tag managers, and bundled JavaScript."
+      detail: `The response references staticfile.org or a subdomain. This domain is part of the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*unionadjs\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: unionadjs.com"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this as a compromise indicator and investigate templates, CMS plugins, tag managers, and bundled JavaScript for malicious injection."
+      detail: `The response references unionadjs.com or a subdomain. This is a known malicious-looking supply-chain/ad-injection IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*xhsbpza\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: xhsbpza.com"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this as a compromise indicator and investigate the page, templates, tag manager, and bundled JavaScript for active malicious injection."
+      detail: `The response references xhsbpza.com or a subdomain. This is a known malicious-looking payload or redirect IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*union\.macoms\.la([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: union.macoms.la"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this as a compromise indicator and investigate templates, tag managers, CMS plugins, and bundled JavaScript."
+      detail: `The response references union.macoms.la or a related subdomain. This is a known malicious-looking supply-chain IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*newcrbpc\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: newcrbpc.com"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this as a compromise indicator and investigate the application for active malicious injection."
+      detail: `The response references newcrbpc.com or a subdomain. This is a known malicious-looking redirect or payload IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*googie-anaiytics\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: googie-anaiytics.com"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this typo-squatted analytics-looking domain as a compromise indicator and review tag managers, templates, and bundled JavaScript."
+      detail: `The response references googie-anaiytics.com or a subdomain. This typo-squatted analytics-looking domain is included in the known supply-chain IOC set. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*kuurza\.com([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: kuurza.com"
+      severity: high
+      confidence: certain
+      remediation: "Remove the reference immediately. Treat this as a compromise indicator and investigate for malicious redirects or injected script."
+      detail: `The response references kuurza.com or a subdomain. This is included in the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*vty70\.net([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: vty70.net"
+      severity: high
+      confidence: firm
+      remediation: "Remove the reference immediately. Investigate for malicious redirection, compromised third-party script, or stale supply-chain IOC references."
+      detail: `The response references vty70.net or a subdomain. This is included in the known supply-chain IOC set monitored by this BCheck. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 2: Trojanized jQuery and suspicious public package
+  # distribution indicators.
+  #############################################################
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:[a-z0-9-]+\.)*jquery\.js\.cn([^a-z0-9.-]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Known IOC domain: jquery.js.cn"
+      severity: high
+      confidence: firm
+      remediation: "Remove the reference. Load jQuery only from the official project, a trusted CDN with exact version pinning and SRI, or self-hosted reviewed code. Review the page for other injected dependency references."
+      detail: `The response references jquery.js.cn or a subdomain. This is monitored as a trojanized-jQuery style supply-chain IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])cdn\.jsdelivr\.net/gh/indexsc/" then
+    report issue and continue:
+      name: "[Supply Chain] Suspicious jsDelivr GitHub source: indexsc"
+      severity: high
+      confidence: firm
+      remediation: "Remove this reference. Replace with the legitimate upstream package from a trusted source, exact version pinning, and SRI, or self-host reviewed code."
+      detail: `The response references cdn.jsdelivr.net/gh/indexsc/. This GitHub/jsDelivr path is monitored as a suspicious package distribution IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])github\.com/indexsc/" then
+    report issue and continue:
+      name: "[Supply Chain] Suspicious GitHub source: indexsc"
+      severity: high
+      confidence: firm
+      remediation: "Remove this reference. Replace with the legitimate upstream package from a trusted source, exact version pinning, and SRI, or self-host reviewed code."
+      detail: `The response references github.com/indexsc/. This account/path is monitored as a suspicious package distribution IOC. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "(^|[^a-z0-9.-])(?:cdn\.jsdelivr\.net/npm|unpkg\.com)/(?:cdnjquery|footersicons|jquertyi|jqueryxxx|logoo|sytlesheets)(?:@|/|[\"'?&#\s]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Suspicious public npm CDN package name"
+      severity: high
+      confidence: firm
+      remediation: "Remove the package reference, audit the dependency tree, and replace it with the legitimate upstream library from a trusted source. Review package-lock/yarn-lock files and build configuration for typosquatted packages."
+      detail: `The response references a suspicious package name through a public npm CDN. This may indicate typosquatting or trojanized dependency usage. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 3: External script/style transport and SRI hygiene.
+  # These are passive HTML checks and can be noisy. They are Info
+  # or Medium because they are often weaknesses, not confirmed IOCs.
+  #############################################################
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script|<link") and {to_lower(latest.response.body)} matches "<script\b(?=[^>]*\bsrc\s*=\s*['\"]http://)[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] External script loaded over HTTP"
+      severity: medium
+      confidence: firm
+      remediation: "Load third-party scripts only over HTTPS. Add SRI and exact version pinning where possible, or self-host reviewed assets."
+      detail: `The HTML response appears to load an external script over plain HTTP. A network attacker or compromised intermediary could modify the JavaScript before it reaches users. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script|<link") and {to_lower(latest.response.body)} matches "<link\b(?=[^>]*\bhref\s*=\s*['\"]http://)(?=[^>]*\brel\s*=\s*['\"][^'\"]*(?:stylesheet|preload|modulepreload)[^'\"]*['\"])[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] External stylesheet/preload loaded over HTTP"
+      severity: medium
+      confidence: firm
+      remediation: "Load external stylesheets, preload, and modulepreload resources only over HTTPS. Add SRI and exact version pinning where supported, or self-host reviewed assets."
+      detail: `The HTML response appears to load an external stylesheet, preload, or modulepreload resource over plain HTTP. A network attacker or compromised intermediary could modify the resource. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script|<link") and {to_lower(latest.response.body)} matches "<script\b(?=[^>]*\bsrc\s*=\s*['\"](?:https?:)?//)(?![^>]*\bintegrity\s*=)[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] External script loaded without SRI"
+      severity: info
+      confidence: tentative
+      remediation: "Add integrity and crossorigin attributes to external script tags where practical, pin exact dependency versions, or self-host reviewed assets. For scripts that change frequently, document ownership and review controls instead of using mutable third-party URLs."
+      detail: `The HTML response appears to load an external script without an integrity attribute. If the third-party host or CDN is compromised, users may execute modified JavaScript. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script|<link") and {to_lower(latest.response.body)} matches "<link\b(?=[^>]*\bhref\s*=\s*['\"](?:https?:)?//)(?=[^>]*\brel\s*=\s*['\"][^'\"]*(?:stylesheet|preload|modulepreload)[^'\"]*['\"])(?![^>]*\bintegrity\s*=)[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] External stylesheet/preload loaded without SRI"
+      severity: info
+      confidence: tentative
+      remediation: "Add integrity and crossorigin attributes where supported, pin exact versions, or self-host reviewed assets. For resources that cannot use SRI, document the trust boundary and review process."
+      detail: `The HTML response appears to load an external stylesheet, preload, or modulepreload resource without an integrity attribute. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 4: Mutable public package CDN imports.
+  # These are not automatically malicious, but they weaken
+  # reproducibility and make client-side review/SRI harder.
+  #############################################################
+
+  if {to_lower(latest.response)} matches "cdn\.jsdelivr\.net/npm/[^\"'\s<>]*@latest(?:[/?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] jsDelivr npm dependency uses @latest"
+      severity: info
+      confidence: firm
+      remediation: "Pin an exact package version and add SRI. Avoid @latest, broad ranges, or mutable CDN aliases for production assets."
+      detail: `The response references a jsDelivr npm URL using @latest. This makes the browser load whatever package version is current at request time, weakening reviewability and SRI usage. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "unpkg\.com/[^\"'\s<>]*@latest(?:[/?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] unpkg dependency uses @latest"
+      severity: info
+      confidence: firm
+      remediation: "Pin an exact package version and add SRI where practical. Avoid @latest, broad ranges, or mutable CDN aliases for production assets."
+      detail: `The response references an unpkg URL using @latest. This makes the browser load whatever package version is current at request time, weakening reviewability and SRI usage. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "esm\.sh/[^\"'\s<>]*@latest(?:[/?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] esm.sh dependency uses @latest"
+      severity: info
+      confidence: firm
+      remediation: "Pin an exact package version. Avoid @latest or mutable CDN aliases for production assets."
+      detail: `The response references an esm.sh URL using @latest. This makes the browser load whatever package version is current at request time. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "skypack\.dev/[^\"'\s<>]*@latest(?:[/?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Skypack dependency uses @latest"
+      severity: info
+      confidence: firm
+      remediation: "Pin an exact package version. Avoid @latest or mutable CDN aliases for production assets."
+      detail: `The response references a Skypack URL using @latest. This makes the browser load whatever package version is current at request time. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "cdn\.jsdelivr\.net/npm/(?:@[^/\"'\s<>]+/[^@/\"'\s<>]+|[^@/\"'\s<>]+)(?:/|[?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] jsDelivr npm dependency appears versionless"
+      severity: info
+      confidence: tentative
+      remediation: "Pin an exact package version in the CDN URL and add SRI. Avoid versionless public CDN imports for production assets."
+      detail: `The response appears to reference a jsDelivr npm package URL without an exact version in the package segment. Versionless CDN imports are mutable and make review, rollback, and SRI harder. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "unpkg\.com/(?:@[^/\"'\s<>]+/[^@/\"'\s<>]+|[^@/\"'\s<>]+)(?:/|[?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] unpkg dependency appears versionless"
+      severity: info
+      confidence: tentative
+      remediation: "Pin an exact package version in the CDN URL and add SRI where practical. Avoid versionless public CDN imports for production assets."
+      detail: `The response appears to reference an unpkg package URL without an exact version in the package segment. Versionless CDN imports are mutable and make review, rollback, and SRI harder. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "esm\.sh/(?:@[^/\"'\s<>]+/[^@/\"'\s<>]+|[^@/\"'\s<>]+)(?:/|[?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] esm.sh dependency appears versionless"
+      severity: info
+      confidence: tentative
+      remediation: "Pin an exact package version. Avoid versionless public CDN imports for production assets."
+      detail: `The response appears to reference an esm.sh package URL without an exact version in the package segment. Versionless CDN imports are mutable and make review and rollback harder. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "skypack\.dev/(?:@[^/\"'\s<>]+/[^@/\"'\s<>]+|[^@/\"'\s<>]+)(?:/|[?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] Skypack dependency appears versionless"
+      severity: info
+      confidence: tentative
+      remediation: "Pin an exact package version. Avoid versionless public CDN imports for production assets."
+      detail: `The response appears to reference a Skypack package URL without an exact version in the package segment. Versionless CDN imports are mutable and make review and rollback harder. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response)} matches "cdn\.jsdelivr\.net/gh/[^\"'\s<>@]+/[^\"'\s<>@]+(?:/|[?#\"'\s<>]|$)" then
+    report issue and continue:
+      name: "[Supply Chain] jsDelivr GitHub URL appears unpinned"
+      severity: info
+      confidence: tentative
+      remediation: "Pin jsDelivr GitHub URLs to an immutable release tag or commit hash and add SRI where possible. Avoid loading production JavaScript from mutable repository branches."
+      detail: `The response appears to reference a jsDelivr GitHub URL without an explicit version, tag, or commit in the URL. This can make browser-loaded code mutable. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 5: Source-control or raw-file JavaScript hosting.
+  # These are not necessarily malicious, but they are risky for
+  # production browser-executed dependencies.
+  #############################################################
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script") and {to_lower(latest.response.body)} matches "<script\b(?=[^>]*\bsrc\s*=\s*['\"](?:https?:)?//(?:raw\.githubusercontent\.com|gist\.githubusercontent\.com|rawcdn\.githack\.com|cdn\.rawgit\.com|rawgit\.com)/)[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] Script loaded from raw source-control hosting"
+      severity: info
+      confidence: firm
+      remediation: "Avoid loading production JavaScript from raw source-control URLs. Publish reviewed releases to a controlled artifact store or trusted CDN, pin immutable versions, and use SRI."
+      detail: `The HTML response appears to load browser-executed JavaScript from raw source-control hosting. These URLs are often mutable or outside normal release review controls. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if ({to_lower(latest.response.headers)} matches "content-type:\s*(?:text/html|application/xhtml\+xml)" or {to_lower(latest.response.body)} matches "<!doctype html|<html|<script") and {to_lower(latest.response.body)} matches "<script\b(?=[^>]*\bsrc\s*=\s*['\"](?:https?:)?//[^'\"/]+\.github\.io/)[^>]*>" then
+    report issue and continue:
+      name: "[Supply Chain] Script loaded from GitHub Pages"
+      severity: info
+      confidence: tentative
+      remediation: "Review whether GitHub Pages is an approved production script source. Prefer controlled artifact hosting, exact version pinning, and SRI for browser-executed dependencies."
+      detail: `The HTML response appears to load JavaScript from a github.io host. This may be legitimate, but it should be reviewed as a third-party script supply-chain dependency. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 6: Dynamic remote JavaScript loading patterns.
+  # These are heuristic findings for manual review.
+  #############################################################
+
+  if {to_lower(latest.response.body)} matches "import\s*\(\s*['\"]https?://" then
+    report issue and continue:
+      name: "[Supply Chain] Dynamic import from remote URL"
+      severity: info
+      confidence: tentative
+      remediation: "Review dynamic remote imports. Prefer bundling reviewed dependencies, using import maps with pinned versions, and applying strict CSP controls."
+      detail: `The response body contains a dynamic import() call that appears to import from an absolute remote URL. This can create a runtime supply-chain dependency that is harder to inventory and protect with SRI. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response.body)} matches "importscripts\s*\(\s*['\"]https?://" then
+    report issue and continue:
+      name: "[Supply Chain] Worker importScripts from remote URL"
+      severity: info
+      confidence: tentative
+      remediation: "Review remote importScripts usage in workers and service workers. Prefer same-origin reviewed assets with version control and CSP restrictions."
+      detail: `The response body contains importScripts() loading from an absolute remote URL. This can create a runtime third-party JavaScript dependency in a worker context. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response.body)} matches "document\.createelement\s*\(\s*['\"]script['\"]\s*\)" and {to_lower(latest.response.body)} matches "\.src\s*=\s*['\"]https?://" then
+    report issue and continue:
+      name: "[Supply Chain] Dynamic external script creation"
+      severity: info
+      confidence: tentative
+      remediation: "Review dynamic script creation. Prefer static, pinned, integrity-protected script tags or bundled reviewed dependencies. Ensure CSP restricts script-src to approved sources."
+      detail: `The response body appears to dynamically create a script element and assign a remote HTTP(S) URL. This can hide third-party script dependencies from simple HTML review. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response.body)} matches "document\.write\s*\([^)]*<script[^>]+src\s*=" then
+    report issue and continue:
+      name: "[Supply Chain] document.write injects a script tag"
+      severity: info
+      confidence: tentative
+      remediation: "Review document.write-based script injection. Prefer static, pinned, integrity-protected script tags or bundled reviewed dependencies."
+      detail: `The response body appears to use document.write() to inject a script tag. This pattern is common in legacy third-party loaders and can obscure supply-chain dependencies. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response.body)} matches "eval\s*\([^)]*fetch\s*\(" then
+    report issue and continue:
+      name: "[Supply Chain] eval used with fetched content"
+      severity: medium
+      confidence: tentative
+      remediation: "Do not execute fetched content with eval. Replace with reviewed static code, signed bundles, strict CSP, and trusted dependency loading patterns."
+      detail: `The response body appears to use eval() with fetched content. This is a high-risk runtime code loading pattern that can become a supply-chain compromise path. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.response.body)} matches "new\s+function\s*\([^)]*fetch\s*\(" then
+    report issue and continue:
+      name: "[Supply Chain] Function constructor used with fetched content"
+      severity: medium
+      confidence: tentative
+      remediation: "Do not execute fetched content with the Function constructor. Replace with reviewed static code, signed bundles, strict CSP, and trusted dependency loading patterns."
+      detail: `The response body appears to use the Function constructor with fetched content. This is a high-risk runtime code loading pattern that can become a supply-chain compromise path. Matched passively in the response for: {latest.request.url}`
+  end if
+
+  #############################################################
+  # Cluster 7: Exposed dependency manifest / lock files.
+  # These are passive because they only trigger if the file is
+  # observed in normal Burp traffic or selected for passive scan.
+  #############################################################
+
+  if {to_lower(latest.request.url.file)} matches "(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|npm-shrinkwrap\.json)([?#].*)?$" then
+    report issue and continue:
+      name: "[Supply Chain] Dependency lock file exposed"
+      severity: low
+      confidence: firm
+      remediation: "Do not serve dependency lock files from production web roots unless intentionally public. Move build files outside the web root and restrict access to source/dependency metadata."
+      detail: `The requested URL appears to expose a JavaScript dependency lock file. Lock files can reveal package names and versions that help attackers target known supply-chain or dependency vulnerabilities. Matched passively for: {latest.request.url}`
+  end if
+
+  if {to_lower(latest.request.url.file)} matches "(^|/)(package\.json|bower\.json|composer\.json|composer\.lock|gemfile\.lock)([?#].*)?$" then
+    report issue and continue:
+      name: "[Supply Chain] Dependency manifest exposed"
+      severity: low
+      confidence: tentative
+      remediation: "Do not serve dependency manifests from production web roots unless intentionally public. Move build files outside the web root and restrict access to source/dependency metadata."
+      detail: `The requested URL appears to expose a dependency manifest or lock file. This can reveal package names and versions that help attackers target known dependency or supply-chain weaknesses. Matched passively for: {latest.request.url}`
+  end if
+

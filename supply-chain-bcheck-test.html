@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Burp BCheck Supply Chain Passive Test</title>
+
+  <!-- Known IOC test strings. type=text/plain prevents execution, but keeps strings visible to Burp. -->
+  <script type="text/plain" src="https://cdn.polyfill.io/v3/polyfill.min.js"></script>
+  <script type="text/plain" src="https://jquery.js.cn/jquery.min.js"></script>
+  <script type="text/plain" src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script type="text/plain" src="https://staticfile.org/test.js"></script>
+
+  <!-- Hygiene test strings. -->
+  <script type="text/plain" src="https://insecure-cdn.example.test/lib.js"></script>
+  <script type="text/plain" src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script>
+  <script type="text/plain" src="https://unpkg.com/react/umd/react.production.min.js"></script>
+  <script type="text/plain" src="https://raw.githubusercontent.com/example/repo/main/app.js"></script>
+  <link rel="stylesheet" href="https://insecure-cdn.example.test/style.css">
+</head>
+<body>
+  <h1>Burp BCheck supply-chain passive test</h1>
+  <p>This page intentionally contains fake supply-chain indicators for local Burp testing.</p>
+  <script type="text/plain">
+    import("https://cdn.example.test/module.js");
+    const s = document.createElement("script");
+    s.src = "https://cdn.example.test/dynamic.js";
+    eval(fetch("https://cdn.example.test/code.js"));
+  </script>
+</body>
+</html>
